@@ -1,24 +1,39 @@
-import logo from './logo.svg';
-import './App.css';
+import { useCallback, useEffect } from "react";
+import { Buttons } from "./Buttons";
+import { SearchForm } from "./SearchForm";
+import { Stories } from "./Stories";
+import { useData } from "./Utilities";
 
 function App() {
+  const [{ query, page, api_endpoint }, dispatch] = useData();
+
+  const url = `${api_endpoint}query=${query}&page=${page}`;
+
+  const getStories = useCallback(async () => {
+    dispatch({ type: "SET_LOADING" });
+    try {
+      const resp = await fetch(url);
+      const data = await resp.json();
+
+      dispatch({
+        type: "SET_STORIES",
+        payload: { hits: data.hits, nbPages: data.nbPages },
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  }, [url, dispatch]);
+
+  useEffect(() => {
+    getStories();
+  }, [api_endpoint, query, page, getStories]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <SearchForm />
+      <Buttons />
+      <Stories />
+    </>
   );
 }
 
